@@ -32,7 +32,7 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
 
         if (!$token = Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'Unauthorized'], 200);
         }
 
         return $this->respondWithToken($token);
@@ -46,7 +46,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Email sudah digunakan',
-            ], 400);
+            ], 200);
         }
         $data = [
             "name" => $request->name,
