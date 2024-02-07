@@ -11,10 +11,13 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 //this is new
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject 
+class User extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
 {
     use Authenticatable, Authorizable;
-
+    protected $guarded = ['id'];
+    protected $hidden = [
+        'password'
+    ];
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *

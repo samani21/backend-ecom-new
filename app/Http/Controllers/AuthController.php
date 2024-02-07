@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use  App\Models\User;
+use  App\Models\Users;
 
 class AuthController extends Controller
 {
@@ -12,7 +13,7 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'logout']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh', 'logout']]);
     }
     /**
      * Get a JWT via given credentials.
@@ -30,14 +31,49 @@ class AuthController extends Controller
 
         $credentials = $request->only(['email', 'password']);
 
-        if (! $token = Auth::attempt($credentials)) {
+        if (!$token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         return $this->respondWithToken($token);
     }
 
-     /**
+    public function register(Request $request)
+    {
+        $user = User::where("email", $request->email)->first();
+
+        if ($user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sudah digunakan',
+            ], 400);
+        }
+        $data = [
+            "name" => $request->name,
+            "email" => $request->email,
+            "password" => app("hash")->make($request->password),
+            "cart_data" => 1,
+            "date" => date("Y-m-d")
+        ];
+
+        $insert = User::create($data);
+        if ($insert) {
+            $credentials = $request->only(["email", "password"]);
+            $token = Auth::attempt($credentials);
+            return response()->json([
+                'success' => true,
+                'message' => 'Register berhasil',
+                'token' => $token
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => "problem with server",
+            ], 500);
+        }
+    }
+
+    /**
      * Get the authenticated User.
      *
      * @return \Illuminate\Http\JsonResponse

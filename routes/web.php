@@ -17,3 +17,10 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 $router->post('api/login', 'AuthController@login');
+$router->post('api/register', 'AuthController@register');
+
+$router->get('/product', 'ProductController@index');
+$router->post('/product/upload', 'ProductController@create');
+$router->post('/product/add', 'ProductController@store');
+$router->delete('/product/{id}/delete', 'ProductController@destroy');
+$router->get('/image', 'ProductController@get_image');
