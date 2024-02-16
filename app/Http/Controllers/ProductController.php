@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductController extends BaseController
@@ -12,6 +13,28 @@ class ProductController extends BaseController
     public function index()
     {
         $product = Product::all();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'List Semua Post',
+            'data'    => $product
+        ], 200);
+    }
+
+    public function collection()
+    {
+        $product = DB::table('product')->orderBy('id', 'desc')->limit(8)->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'List Semua Post',
+            'data'    => $product
+        ], 200);
+    }
+
+    public function women()
+    {
+        $product = DB::table('product')->where('category', 'women')->limit(5)->get();
 
         return response()->json([
             'success' => true,
