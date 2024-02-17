@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Keranjang;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TripayController extends Controller
 {
@@ -35,21 +37,35 @@ class TripayController extends Controller
 
         curl_close($curl);
 
-        $response = json_decode($response)->data;
+        $response = response($response)->withHeaders([
+            'Content-Type' => 'application/json',
+            'X-Custom-Header' => 'value',
+        ]);
         return $response ? $response :  $err;
     }
 
     public function requestTransaction(Request $request)
     {
-        $method = $method = 'BCAVA';
+        $method =  $request->method;
+        $user =  $request->id_user;
         $apikey = env('TRIPAY_API_KEY');
         $privatekey =  env('TRIPAY_PRIVATE_KEY');
         $marchentCode =  env('TRIPAY_MERCHANT_CODE');
         // dd($apikey,$privatekey,$marchentCode);
         $marchentRef = 'Px-' . time();
 
-        $amount       = 1000000;
-
+        $keranjang = DB::table('keranjang')->join('product', 'id_product', '=', 'product.id')->where('id_user', $user)->where('status', 1)
+            ->select(
+                'keranjang.id as sku',
+                'product.name as name',
+                'keranjang.jumlah as quantity',
+                'product.new_price as price',
+            )
+            ->get();
+        $total_k = DB::table('keranjang')->join('product', 'id_product', '=', 'product.id')->where('id_user', $user)->where('status', 1)
+            ->select(DB::raw('sum(new_price*jumlah) as totala'))->first();
+        $items = json_decode($keranjang);
+        $amount =$total_k->totala;
         $data = [
             'method'         => $method,
             'merchant_ref'   => $marchentRef,
@@ -57,29 +73,12 @@ class TripayController extends Controller
             'customer_name'  => 'Nama Pelanggan',
             'customer_email' => 'emailpelanggan@domain.com',
             'customer_phone' => '081234567890',
-            'order_items'    => [
-                [
-                    'sku'         => 'FB-06',
-                    'name'        => 'Nama Produk 1',
-                    'price'       => 500000,
-                    'quantity'    => 1,
-                    'product_url' => 'https://tokokamu.com/product/nama-produk-1',
-                    'image_url'   => 'https://tokokamu.com/product/nama-produk-1.jpg',
-                ],
-                [
-                    'sku'         => 'FB-07',
-                    'name'        => 'Nama Produk 2',
-                    'price'       => 500000,
-                    'quantity'    => 1,
-                    'product_url' => 'https://tokokamu.com/product/nama-produk-2',
-                    'image_url'   => 'https://tokokamu.com/product/nama-produk-2.jpg',
-                ]
-            ],
+            'order_items'    =>  $items,
             'return_url'   => 'https://domainanda.com/redirect',
             'expired_time' => (time() + (24 * 60 * 60)), // 24 jam
             'signature'    => hash_hmac('sha256', $marchentCode . $marchentRef . $amount, $privatekey)
         ];
-
+        // return $data;
         $curl = curl_init();
 
         curl_setopt_array($curl, [
@@ -97,14 +96,17 @@ class TripayController extends Controller
         $response = curl_exec($curl);
         $error = curl_error($curl);
         curl_close($curl);
-
-        $data_p = [
-            'id_user' => 9,
-            'refrence' => $marchentRef,
-            'total' => 10
-        ];
-        $insert = Pembayaran::create($data_p);
-        return $insert ?: $error;
+$response = response($response)->withHeaders([
+            'Content-Type' => 'application/json',
+            'X-Custom-Header' => 'value',
+        ]);;
+        // $data_p = [
+        //     'id_user' => 9,
+        //     'refrence' => $marchentRef,
+        //     'total' => 10
+        // ];
+        // $insert = Pembayaran::create($data_p);
+        return $response ?: $error;
     }
 
     public function detailTransaction($refrence)

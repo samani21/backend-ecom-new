@@ -34,7 +34,9 @@ $router->get('/keranjang/checkout/{id}', 'KeranjangController@checkout');
 $router->post('/keranjang/delete/{id}', 'KeranjangController@distroy');
 
 $router->post('/pembayaran/bayar', 'pembayaranController@store');
+$router->get('/pembayaran/detail/{id}', 'pembayaranController@index');
 
 $router->get('tripay', 'TripayController@getPaymentChennels');
 $router->post('transaksi', 'TripayController@requestTransaction');
 $router->get('detail-transaksi/{refrence}', 'TripayController@detailTransaction');
+$router->post('/callback-tripay','TripayCallbackController@handle');

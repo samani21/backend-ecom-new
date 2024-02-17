@@ -14,6 +14,6 @@ class Pembayaran extends Model
      * @var array
      */
     protected $fillable = [
-        'id_user', 'refrence', 'total'
+        'id_user', 'refrence', 'total','status'
     ];
 }

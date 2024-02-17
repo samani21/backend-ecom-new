@@ -17,20 +17,20 @@ class PembayaranController extends BaseController
     public function store(Request $request)
     {
         $id_user = $request->id_user;
-        $id_product = $request->id_product;
         $keranjang = DB::table('keranjang')->where('id_user', $id_user)->where('status', 1)->get();
         $data = [
             'id_user' => $request->id_user,
-            'refrensi' => 1,
-            'total' => $request->total
+            'refrence' => $request->reference,
+            'total' => $request->total,
+            'status' => 1
         ];
 
         $insert = Pembayaran::create($data);
 
         foreach ($keranjang as $ke) {
             $keranjang1 = Keranjang::find($ke->id);
-            $keranjang1->id_pembayaran = $insert->id;
-            $keranjang1->status = 2;
+            $keranjang1->id_pembayaran = 0;
+            $keranjang1->status = 1;
             $keranjang1->save();
         }
         return response()->json([
@@ -43,23 +43,12 @@ class PembayaranController extends BaseController
 
     public function index($id)
     {
-        $keranjang = DB::table('keranjang')->join('product', 'product.id', '=', 'keranjang.id_product')
-            ->where('id_user', $id)
-            ->select(
-                'keranjang.id',
-                'jumlah',
-                'name',
-                'image',
-                'category',
-                'new_price',
-                'old_price'
-            )
-            ->where('jumlah', '>', 0)
-            ->get();
+        $pembayaran = DB::table('pembayaran')->where('id_user', $id)->orderBy('id', 'desc')
+            ->first();
         return response()->json([
             'success' => true,
             'message' => 'List Semua Post',
-            'data'    => $keranjang
+            'data'    => $pembayaran
         ], 200);
     }
 }
